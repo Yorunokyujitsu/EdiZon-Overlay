@@ -47,22 +47,22 @@ public:
     ~GuiCheats() { }
 
     virtual tsl::elm::Element* createUI() override {
-        auto rootFrame = new tsl::elm::OverlayFrame("EdiZon", "Cheats");
+        auto rootFrame = new tsl::elm::OverlayFrame("에디존 - 치트 매니저", "1.0.8-ASAP");
 
         if (edz::cheat::CheatManager::getCheats().size() == 0) {
             auto warning = new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h){
                 renderer->drawString("\uE150", false, 180, 250, 90, renderer->a(0xFFFF));
-                renderer->drawString("No Cheats loaded!", false, 110, 340, 25, renderer->a(0xFFFF));
+                renderer->drawString("    치트 로드 실패!", false, 110, 340, 25, renderer->a(0xFFFF));
             });
 
             rootFrame->setContent(warning);
 
         } else {
             auto list = new tsl::elm::List();
-            std::string head = "Section: " + this->m_section;
+            std::string head = "섹션: " + this->m_section;
 
             if(m_section.length() > 0) list->addItem(new tsl::elm::CategoryHeader(head));
-            else list->addItem(new tsl::elm::CategoryHeader("Available cheats"));
+            else list->addItem(new tsl::elm::CategoryHeader("이용 가능한 치트"));
 
             bool skip = false, inSection = false, submenus = true;
             std::string skipUntil = "";
@@ -108,7 +108,10 @@ public:
                     }
                     // items to add to section
                     else if(!skip && (inSection || this->m_section.length() < 1)) {
-                        auto cheatToggleItem = new tsl::elm::ToggleListItem(/*formatString("%d:%s: %s", cheat->getID(), (cheat->isEnabled() ? "y" : "n"),*/ cheat->getName()/*.c_str()).c_str()*/, cheat->isEnabled());
+                        std::string cheatNameCheck = cheat->getName();
+                        replaceAll(cheatNameCheck, ":ENABLED", "");
+
+                        auto cheatToggleItem = new tsl::elm::ToggleListItem(/*formatString("%d:%s: %s", cheat->getID(), (cheat->isEnabled() ? "y" : "n"),*/ cheatNameCheck/*.c_str()).c_str()*/, cheat->isEnabled());
                         cheatToggleItem->setStateChangedListener([&cheat](bool state) { cheat->setState(state); });
 
                         this->m_cheatToggleItems.insert({cheat->getID(), cheatToggleItem});
@@ -119,7 +122,10 @@ public:
                     if(cheat->getName().find("--SectionStart:") != std::string::npos || cheat->getName().find("--SectionEnd:") != std::string::npos || cheat->getName().find("--DisableSubmenus--") != std::string::npos)
                         continue;
 
-                    auto cheatToggleItem = new tsl::elm::ToggleListItem(cheat->getName(), cheat->isEnabled());
+                    std::string cheatNameCheck = cheat->getName();
+                    replaceAll(cheatNameCheck, ":ENABLED", "");
+
+                    auto cheatToggleItem = new tsl::elm::ToggleListItem(cheatNameCheck, cheat->isEnabled());
                     cheatToggleItem->setStateChangedListener([&cheat](bool state) { cheat->setState(state); });
 
                     this->m_cheatToggleItems.insert({cheat->getID(), cheatToggleItem});
@@ -132,7 +138,7 @@ public:
             if(this->m_numCheats < 1){
                 auto warning = new tsl::elm::CustomDrawer([](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h){
                     renderer->drawString("\uE150", false, 180, 250, 90, renderer->a(0xFFFF));
-                    renderer->drawString("No Cheats in Submenu!", false, 110, 340, 25, renderer->a(0xFFFF));
+                    renderer->drawString("서브 메뉴에 치트가 없습니다!", false, 110, 340, 25, renderer->a(0xFFFF));
                 });
 
                 rootFrame->setContent(warning);
@@ -165,7 +171,7 @@ private:
     std::map<u32, tsl::elm::ToggleListItem*> m_cheatToggleItems;
 };
 
-class GuiStats : public tsl::Gui {
+/*class GuiStats : public tsl::Gui {
 public:
     GuiStats() { 
         if (hosversionAtLeast(8,0,0)) {
@@ -189,32 +195,37 @@ public:
      }
 
     virtual tsl::elm::Element* createUI() override {
-        auto rootFrame = new tsl::elm::OverlayFrame("EdiZon", "System Information");
+        auto rootFrame = new tsl::elm::OverlayFrame("에디존 - 시스템 정보", "1.0.8-ASAP");
 
         auto infos = new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, u16 x, u16 y, u16 w, u16 h){
-            renderer->drawString("CPU Temparature:", false, 45, 160, 18, renderer->a(tsl::style::color::ColorText));
-            renderer->drawString("PCB Temparature:", false, 45, 190, 18, renderer->a(tsl::style::color::ColorText));
+            renderer->drawString("CPU 온도:", false, 45, 160, 18, renderer->a(tsl::style::color::ColorText));
+            renderer->drawString("PCB 온도:", false, 45, 190, 18, renderer->a(tsl::style::color::ColorText));
 
             renderer->drawRect(x, 203, w, 1, renderer->a(tsl::style::color::ColorFrame));
-            renderer->drawString("CPU Clock:", false, 45, 230, 18, renderer->a(tsl::style::color::ColorText));
-            renderer->drawString("GPU Clock:", false, 45, 260, 18, renderer->a(tsl::style::color::ColorText));
-            renderer->drawString("MEM Clock:", false, 45, 290, 18, renderer->a(tsl::style::color::ColorText));
+            renderer->drawString("CPU 클럭:", false, 45, 230, 18, renderer->a(tsl::style::color::ColorText));
+            renderer->drawString("GPU 클럭:", false, 45, 260, 18, renderer->a(tsl::style::color::ColorText));
+            renderer->drawString("RAM 클럭:", false, 45, 290, 18, renderer->a(tsl::style::color::ColorText));
 
             renderer->drawRect(x, 303, w, 1, renderer->a(tsl::style::color::ColorFrame));
-            renderer->drawString("Local IP:", false, 45, 330, 18, renderer->a(tsl::style::color::ColorText));
+            renderer->drawString("로컬 IP:", false, 45, 330, 18, renderer->a(tsl::style::color::ColorText));
 
-            s32 temparature = 0;
-            if(hosversionAtLeast(14,0,0)){
-                tsGetTemperature(TsLocation_Internal, &temparature);
-                renderer->drawString(formatString("%d °C", temparature).c_str(), false, 240, 160, 18, renderer->a(tsl::style::color::ColorHighlight));
-                tsGetTemperature(TsLocation_External, &temparature);
-                renderer->drawString(formatString("%d °C", temparature).c_str(), false, 240, 190, 18, renderer->a(tsl::style::color::ColorHighlight));
-            } else {
-                tsGetTemperatureMilliC(TsLocation_Internal, &temparature);
-                renderer->drawString(formatString("%.02f °C", temparature / 1000.0F).c_str(), false, 240, 160, 18, renderer->a(tsl::style::color::ColorHighlight));
-                tsGetTemperatureMilliC(TsLocation_External, &temparature);
-                renderer->drawString(formatString("%.02f °C", temparature / 1000.0F).c_str(), false, 240, 190, 18, renderer->a(tsl::style::color::ColorHighlight));
+            float socTemperature = 0, pcbTemperature = 0;
+            if(hosversionAtLeast(10,0,0)){
+              TsSession ts_session;
+              Result rc = tsOpenSession(&ts_session, TsDeviceCode_LocationExternal);
+              if (R_SUCCEEDED(rc)) {
+                tsSessionGetTemperature(&ts_session, &socTemperature);
+                tsSessionClose(&ts_session);
+              }
+              rc = tsOpenSession(&ts_session, TsDeviceCode_LocationInternal);
+              if (R_SUCCEEDED(rc)) {
+                tsSessionGetTemperature(&ts_session, &pcbTemperature);
+                tsSessionClose(&ts_session);
+              }
             }
+            renderer->drawString(formatString("%.1f °C", socTemperature).c_str(), false, 240, 160, 18, renderer->a(tsl::style::color::ColorHighlight));
+            renderer->drawString(formatString("%.1f °C", pcbTemperature).c_str(), false, 240, 190, 18, renderer->a(tsl::style::color::ColorHighlight));
+            
 
             u32 cpuClock = 0, gpuClock = 0, memClock = 0;
 
@@ -233,7 +244,7 @@ public:
             renderer->drawString(formatString("%.01f MHz", memClock / 1'000'000.0F).c_str(), false, 240, 290, 18, renderer->a(tsl::style::color::ColorHighlight));
 
             if (this->m_ipAddress == INADDR_LOOPBACK)
-                renderer->drawString("Offline", false, 240, 330, 18, renderer->a(tsl::style::color::ColorHighlight));
+                renderer->drawString("오프라인", false, 240, 330, 18, renderer->a(tsl::style::color::ColorHighlight));
             else 
                 renderer->drawString(this->m_ipAddressString.c_str(), false, 240, 330, 18, renderer->a(tsl::style::color::ColorHighlight));
 
@@ -242,29 +253,29 @@ public:
                 u32 wifiStrength;
                 NifmInternetConnectionStatus conStatus;
                 nifmGetInternetConnectionStatus(&conType, &wifiStrength, &conStatus);
-                renderer->drawString("Connection:", false, 45, 360, 18, renderer->a(tsl::style::color::ColorText));
+                renderer->drawString("연결 상태:", false, 45, 360, 18, renderer->a(tsl::style::color::ColorText));
                 if(conStatus == NifmInternetConnectionStatus_Connected && conType == NifmInternetConnectionType_WiFi) {
-                    std::string wifiStrengthStr = "(Strong)";
+                    std::string wifiStrengthStr = "(강함)";
                     tsl::Color color = tsl::Color(0x0, 0xF, 0x0, 0xF);
                     if(wifiStrength == 2){
-                        wifiStrengthStr = "(Fair)";
+                        wifiStrengthStr = "(보통)";
                         color = tsl::Color(0xE, 0xE, 0x2, 0xF);
                     } else if(wifiStrength <= 1){
-                        wifiStrengthStr = "(Poor)";
+                        wifiStrengthStr = "(약함)";
                         color = tsl::Color(0xF, 0x0, 0x0, 0xF);
                     }
                     renderer->drawString("WiFi", false, 240, 360, 18, renderer->a(tsl::style::color::ColorHighlight));
                     renderer->drawString(wifiStrengthStr.c_str(), false, 285, 360, 18, renderer->a(color));
                 } else if(conStatus == NifmInternetConnectionStatus_Connected && conType == NifmInternetConnectionType_Ethernet){
-                    renderer->drawString("Ethernet", false, 240, 360, 18, renderer->a(tsl::style::color::ColorHighlight));
+                    renderer->drawString("이더넷", false, 240, 360, 18, renderer->a(tsl::style::color::ColorHighlight));
                 } else {
-                    renderer->drawString("Disconnected", false, 240, 360, 18, renderer->a(tsl::style::color::ColorHighlight));
+                    renderer->drawString("연결 없음", false, 240, 360, 18, renderer->a(tsl::style::color::ColorHighlight));
                 }
             } else {
                 s32 signalStrength = 0;
                 wlaninfGetRSSI(&signalStrength);
 
-                renderer->drawString("WiFi Signal:", false, 45, 360, 18, renderer->a(tsl::style::color::ColorText));
+                renderer->drawString("WiFi 신호:", false, 45, 360, 18, renderer->a(tsl::style::color::ColorText));
                 renderer->drawString(formatString("%d dBm", signalStrength).c_str(), false, 240, 360, 18, renderer->a(tsl::style::color::ColorHighlight)); 
             }
         });
@@ -279,7 +290,7 @@ private:
     ClkrstSession m_clkrstSessionCpu, m_clkrstSessionGpu, m_clkrstSessionMem;
     long m_ipAddress;
     std::string m_ipAddressString;
-};
+};*/
 
 class GuiMain : public tsl::Gui {
 public:
@@ -290,13 +301,13 @@ public:
     virtual tsl::elm::Element* createUI() {
         auto *rootFrame = new tsl::elm::HeaderOverlayFrame();
         rootFrame->setHeader(new tsl::elm::CustomDrawer([this](tsl::gfx::Renderer *renderer, s32 x, s32 y, s32 w, s32 h) {
-            renderer->drawString("EdiZon", false, 20, 50, 30, renderer->a(tsl::style::color::ColorText));
-            renderer->drawString("v1.0.7", false, 20, 70, 15, renderer->a(tsl::style::color::ColorDescription));
+            renderer->drawString("에디존", false, 20, 50, 30, renderer->a(tsl::style::color::ColorText));
+            renderer->drawString("1.0.8-ASAP", false, 20, 70, 15, renderer->a(tsl::style::color::ColorDescription));
 
             if (edz::cheat::CheatManager::getProcessID() != 0) {
-                renderer->drawString("Program ID:", false, 150, 40, 15, renderer->a(tsl::style::color::ColorText));
-                renderer->drawString("Build ID:", false, 150, 60, 15, renderer->a(tsl::style::color::ColorText));
-                renderer->drawString("Process ID:", false, 150, 80, 15, renderer->a(tsl::style::color::ColorText));
+                renderer->drawString("TID :", false, 150, 40, 15, renderer->a(tsl::style::color::ColorText));
+                renderer->drawString("BID :", false, 150, 60, 15, renderer->a(tsl::style::color::ColorText));
+                renderer->drawString("PID :", false, 150, 80, 15, renderer->a(tsl::style::color::ColorText));
                 renderer->drawString(GuiMain::s_runningTitleIDString.c_str(), false, 250, 40, 15, renderer->a(tsl::style::color::ColorHighlight));
                 renderer->drawString(GuiMain::s_runningBuildIDString.c_str(), false, 250, 60, 15, renderer->a(tsl::style::color::ColorHighlight));
                 renderer->drawString(GuiMain::s_runningProcessIDString.c_str(), false, 250, 80, 15, renderer->a(tsl::style::color::ColorHighlight));
@@ -306,7 +317,7 @@ public:
         auto list = new tsl::elm::List();
 
         if(edz::cheat::CheatManager::isCheatServiceAvailable()){
-            auto cheatsItem = new tsl::elm::ListItem("Cheats");
+            auto cheatsItem = new tsl::elm::ListItem("치트 매니저");
             cheatsItem->setClickListener([](s64 keys) {
                 if (keys & HidNpadButton_A) {
                     tsl::changeTo<GuiCheats>("");
@@ -316,11 +327,11 @@ public:
             });
             list->addItem(cheatsItem);
         } else {
-            auto noDmntSvc = new tsl::elm::ListItem("Cheat Service Unavailable!");
+            auto noDmntSvc = new tsl::elm::ListItem("치트 사용 불가!");
             list->addItem(noDmntSvc);
         }
 
-        auto statsItem  = new tsl::elm::ListItem("System Information");
+        /*auto statsItem  = new tsl::elm::ListItem("시스템 정보");
         statsItem->setClickListener([](s64 keys) {
             if (keys & HidNpadButton_A) {
                 tsl::changeTo<GuiStats>();
@@ -328,7 +339,7 @@ public:
             }
             return false;
         });
-        list->addItem(statsItem);
+        list->addItem(statsItem);*/
 
         rootFrame->setContent(list);
         return rootFrame;
@@ -340,6 +351,7 @@ public:
     static inline std::string s_runningTitleIDString;
     static inline std::string s_runningProcessIDString;
     static inline std::string s_runningBuildIDString;
+    static inline bool b_firstRun = true;
 };
 
 class EdiZonOverlay : public tsl::Overlay {
@@ -348,8 +360,15 @@ public:
     ~EdiZonOverlay() { }
 
     void initServices() override {
-        if(edz::cheat::CheatManager::isCheatServiceAvailable()) // GDB Check
+        // GDB Check & Saved Cheat Enabling
+        if(edz::cheat::CheatManager::isCheatServiceAvailable()){
             edz::cheat::CheatManager::initialize();
+            for (auto &cheat : edz::cheat::CheatManager::getCheats()) {
+                if(cheat->getName().find(":ENABLED") != std::string::npos){
+                    cheat->setState(true);
+                }
+            }
+        }
         tsInitialize();
         if (hosversionAtLeast(15,0,0)) {
             nifmInitialize(NifmServiceType_User);
