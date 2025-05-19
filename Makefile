@@ -17,12 +17,12 @@ endif
 
 APP_TITLE		:=	EdiZon
 APP_AUTHOR		:=	WerWolv & proferabg & ppkantorski
-APP_VERSION		:=	v1.0.9
+APP_VERSION		:=	1.0.9
 
 TARGET			:=	EdiZon
 OUTDIR			:=	out
 BUILD			:=	build
-SOURCES_TOP		:=	source libs/libultrahand/libultra/source libs/libultrahand/libtesla/source
+SOURCES_TOP		:=	source libs/libultrahand/libultra/source
 SOURCES			+=  $(foreach dir,$(SOURCES_TOP),$(shell find $(dir) -type d 2>/dev/null))
 INCLUDES		:=	include libs/libultrahand/libultra/include libs/libultrahand/libtesla/include
 #EXCLUDES		:=  dmntcht.c
